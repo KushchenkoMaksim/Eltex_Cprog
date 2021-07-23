@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-//Возвращает индекс на котором числа перестают возрастать
+//Р’РѕР·РІСЂР°С‰Р°РµС‚ РёРЅРґРµРєСЃ РЅР° РєРѕС‚РѕСЂРѕРј С‡РёСЃР»Р° РїРµСЂРµСЃС‚Р°СЋС‚ РІРѕР·СЂР°СЃС‚Р°С‚СЊ
 int checkAscendingPart(int *const masIn, int size, int index) {
 	for (int last = masIn[index]; ++index < size && last < masIn[index]; last = masIn[index]);
 	return index;
@@ -13,13 +13,13 @@ int ** getAscendingParts(int *const masIn, int size) {
 	int masCount = 0;
 	int descentingCount = 0;
 
-	//Выделяет память под указатели
+	//Р’С‹РґРµР»СЏРµС‚ РїР°РјСЏС‚СЊ РїРѕРґ СѓРєР°Р·Р°С‚РµР»Рё
 	if ( !(masOut = (int **)malloc(sizeof(int *) * (size / 2 + 1))) ) {
 		return 0;
 	}
 	memset(masOut, 0, sizeof(int *) * (size / 2 + 1));
 
-	//Выделяет память под массив невозрастающих частей
+	//Р’С‹РґРµР»СЏРµС‚ РїР°РјСЏС‚СЊ РїРѕРґ РјР°СЃСЃРёРІ РЅРµРІРѕР·СЂР°СЃС‚Р°СЋС‰РёС… С‡Р°СЃС‚РµР№
 	if ( !(masOut[0] = (int *)malloc(sizeof(int ) * (size + 1))) ) {
 		return 0;
 	}
@@ -29,11 +29,11 @@ int ** getAscendingParts(int *const masIn, int size) {
 		int nextPart;
 		int partSize;
 
-		//Находим где заканчивается возрастающая часть и получаем её размер
+		//РќР°С…РѕРґРёРј РіРґРµ Р·Р°РєР°РЅС‡РёРІР°РµС‚СЃСЏ РІРѕР·СЂР°СЃС‚Р°СЋС‰Р°СЏ С‡Р°СЃС‚СЊ Рё РїРѕР»СѓС‡Р°РµРј РµС‘ СЂР°Р·РјРµСЂ
 		nextPart = checkAscendingPart(masIn, size, i);
 		partSize = nextPart - i;
 		if ( partSize != 1) {
-			//Если есть возрастающая часть
+			//Р•СЃР»Рё РµСЃС‚СЊ РІРѕР·СЂР°СЃС‚Р°СЋС‰Р°СЏ С‡Р°СЃС‚СЊ
 			++masCount;
 			if ( !(masOut[masCount] = (int *)malloc(sizeof(int ) * (partSize + 1))) ) {
 				return 0;
@@ -42,7 +42,7 @@ int ** getAscendingParts(int *const masIn, int size) {
 			memcpy(masOut[masCount] + 1, masIn + i, sizeof(int) * (partSize));
 		}
 		else {
-			//Если есть убывающая часть
+			//Р•СЃР»Рё РµСЃС‚СЊ СѓР±С‹РІР°СЋС‰Р°СЏ С‡Р°СЃС‚СЊ
 			++(masOut[0][0]);
 			masOut[0][masOut[0][0]] = masIn[i];
 		}
@@ -51,9 +51,9 @@ int ** getAscendingParts(int *const masIn, int size) {
 	return masOut;
 }
 
-//Функции для тестирования
+//Р¤СѓРЅРєС†РёРё РґР»СЏ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ
 
-//Освобождает память для двумерного массива
+//РћСЃРІРѕР±РѕР¶РґР°РµС‚ РїР°РјСЏС‚СЊ РґР»СЏ РґРІСѓРјРµСЂРЅРѕРіРѕ РјР°СЃСЃРёРІР°
 void freeMas(int ** mas) {
 	for (int i = 0; mas[i]; ++i) {
 		free(mas[i]);
@@ -61,7 +61,7 @@ void freeMas(int ** mas) {
 	free(mas);
 }
 
-//Выводит двумерный массив на экран
+//Р’С‹РІРѕРґРёС‚ РґРІСѓРјРµСЂРЅС‹Р№ РјР°СЃСЃРёРІ РЅР° СЌРєСЂР°РЅ
 void printMas(int ** mas) {
 	for (int i = 0; mas[i]; ++i) {
 		printf("Row %d: ", i);
