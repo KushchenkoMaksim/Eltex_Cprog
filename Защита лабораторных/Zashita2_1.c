@@ -1,10 +1,21 @@
+/*
+Выполнить первое задание второй лабы со связанным списком.
+
+Первое задание второй лабы:
+Функция получает линейный массив целых, находит в нем последовательности подряд
+возрастающих значений и возвращает их в динамическом массиве указателей на линейные
+массивы (аналог двумерного массива). В каждом из линейных динамических массивов
+содержится копия возрастающей последовательности, начиная с индекса 1, а под
+индексом 0 содержится его длина. Невозрастающие значения включаются в отдельный массив,
+добавляемый в конец (или начало) массива указателей.  
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 typedef struct listElem{
     int *masIn;
-    lestElem* next;
+    struct listElem *next;
 } listElem;
 
 typedef struct list{
@@ -37,15 +48,17 @@ list * getAscendingParts(int *const masIn, int size) {
 	list *masOut;
 	int * example;
 	
-	//Выделяет память под массив невозрастающих частей
+	//Выделяет память под список
 	if ( !(masOut = (list *)malloc(sizeof(list))) ) {
 		return 0;
 	}
+	memset(masOut, 0, sizeof(list));
 
 	//Выделяет память под массив невозрастающих частей
 	if ( !(example = (int *)malloc(sizeof(int ) * (size + 1))) ) {
 		return 0;
 	}
+	memset(example, 0, sizeof(int ) * (size + 1));
 	push(masOut, example);
 	
 	for (int i = 0; i < size; ) {
@@ -57,12 +70,10 @@ list * getAscendingParts(int *const masIn, int size) {
 		partSize = nextPart - i;
 		if ( partSize != 1) {
 			//Если есть возрастающая часть
-			++masCount;
 			if ( !(example = (int *)malloc(sizeof(int ) * (partSize + 1))) ) {
-	            push(masOut, example);
 				return 0;
 			}
-			example = masOut->back->masIn;
+	        push(masOut, example);
 			example[0] = partSize;
 			memcpy(example + 1, masIn + i, sizeof(int) * (partSize));
 		}
@@ -81,7 +92,7 @@ list * getAscendingParts(int *const masIn, int size) {
 
 //Освобождает память для двумерного массива
 void freeMas(list * mas) {
-	for (listElem *cur = mas->front, next; cur->next; cur = next, ++i) {
+	for (listElem *cur = mas->front, *next; cur; cur = next) {
 	    next = cur->next;
 		free(cur->masIn);
 	}
@@ -91,7 +102,7 @@ void freeMas(list * mas) {
 //Выводит список на экран
 void printMas(list * mas) {
     int i = 0;
-	for (listElem *cur = mas->front; cur->next; cur = cur->next, ++i) {
+	for (listElem *cur = mas->front; cur; cur = cur->next, ++i) {
 		printf("Row %d: ", i);
 		for (int j = 1; j <= (cur->masIn)[0]; ++j) {
 			printf("%d, ", (cur->masIn)[j]);
@@ -101,7 +112,7 @@ void printMas(list * mas) {
 }
 
 int main() {
-	int mas[] = { 1, 2, 3, 2, 1, 2, 3 };
+	int mas[] = { 4, 5, 6, 3, 1, 2, 3  };
 	list * result = getAscendingParts(mas, sizeof(mas) / sizeof(int));
 
 	printMas(result);
