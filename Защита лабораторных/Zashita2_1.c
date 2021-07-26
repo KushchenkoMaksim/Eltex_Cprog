@@ -13,16 +13,19 @@
 #include <string.h>
 #include <stdlib.h>
 
+//Один элемент списка
 typedef struct listElem{
     int *masIn;
     struct listElem *next;
 } listElem;
 
+//Список
 typedef struct list{
     listElem* front;
     listElem* back;
 } list;
 
+//Добавить элемент в конец списка.
 void push(list *mas, int *inputArray) {
     if(mas->back) {
         mas->back->next = (listElem *)malloc(sizeof(listElem));
@@ -44,6 +47,7 @@ int checkAscendingPart(int *const masIn, int size, int index) {
 	return index;
 }
 
+//Основная функция
 list * getAscendingParts(int *const masIn, int size) {
 	list *masOut;
 	int * example;
@@ -73,7 +77,7 @@ list * getAscendingParts(int *const masIn, int size) {
 			if ( !(example = (int *)malloc(sizeof(int ) * (partSize + 1))) ) {
 				return 0;
 			}
-	        push(masOut, example);
+			push(masOut, example);
 			example[0] = partSize;
 			memcpy(example + 1, masIn + i, sizeof(int) * (partSize));
 		}
