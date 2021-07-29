@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 
+//Динамический массив для хранения подписи
 typedef struct intArray {
 	int * array;
 	int maxSize;
@@ -10,12 +11,15 @@ typedef struct intArray {
 	int delta;
 } intArray;
 
+//Настройка значений для автоматического расширения массива
 void setUpIntArray(intArray *const mas, int maxSize, int delta) {
 	mas->count = 0;
 	mas->maxSize = maxSize;
 	mas->delta = delta;
 }
 
+
+//Добавление элемента в массимв
 int pushIntArray(intArray *const mas, int item) {
 	//Если масив пуст, то выделяем под него память
 	if(!mas->count && !(mas->array = (int *)malloc(sizeof(int) * mas->maxSize))) {
@@ -31,75 +35,18 @@ int pushIntArray(intArray *const mas, int item) {
 	++(mas->count);
 	return mas->count - 1;
 }
-/*
-void freeIntArray(intArray *const mas) {
-	free(mas->array);
-	mas->count = 0;
-	mas->maxSize = 10;
-}
-*/
-typedef struct charArray {
-	char * array;
-	int maxSize;
-	int count;
-	int delta;
-} charArray;
 
-void setUpCharArray(charArray *const mas, int maxSize, int delta) {
-	mas->count = 0;
-	mas->maxSize = maxSize;
-	mas->delta = delta;
-}
-
-int pushCharArray(charArray * mas, char item) {
-	//Если масив пуст, то выделяем под него память
-	if(!mas->count && !(mas->array = (char *)malloc(sizeof(char) * mas->maxSize))) {
-		return -1;
-	}
-	//Расширяем выделенную память, если выходим за пределы
-	if(mas->count == mas->maxSize - 1) {
-		mas->maxSize += mas->delta;
-		if ( !(mas->array = (char *)realloc(mas->array, sizeof(char) * mas->maxSize)) )
-			return -1;
-	}
-	mas->array[mas->count] = item;
-	++(mas->count);
-	mas->array[mas->count] = '\0';
-	return mas->count - 1;
-}
-/*
-void freeCharArray(charArray *const mas) {
-	free(mas->array);
-	mas->count = 0;
-	mas->maxSize = 10;
-}
-char * intToStr(int number) {
-	char *str;
-	int i;
-	int j;
-	if(!(str = (char *)malloc(sizeof(char) * 11))) {
-		return 0;
-	}
-	for(i = 1; number > i * 10; i *= 10);
-	for(j = 0; i; i /= 10, ++j) {
-		str[j] = number / i;
-		number %= i;
-	}
-	str[j] = '\0';
-	return str;
-}
-*/
-
+//Структура для хранения значений различных параметров RSA
 typedef struct RSA {
 	int p; // два простых числа
 	int q;
 	int fi; //Функция Эйлера получателя
 	int d; // private key
 	int n; // n получателя
-	int e; //случайная открытая экспонента
+	int e; //открытая экспонента ДОЛЖНА БЫТЬ ПРОСТЫМ ЧИСЛОМ
 } RSA;
 
-
+//Расширенный алгоритм Евклида
 int evklid(int U, int V, int restU, int restV)
 {
 	if (V == 0)
@@ -118,7 +65,7 @@ void setUpRSA(RSA *const rsa, int e, int p, int q) {
 	rsa->e = e;
 	
 
-	//Находим мультипликативно обратное число по алгоритму евклида
+	//Алгоритм нахождения числа обратного e по модулю fi с помощью алгоритма Евклида
 	int V = rsa->e;
 	int U = rsa->fi;
 	if (U < V) {
@@ -145,25 +92,32 @@ int pow_special(int number, int expo, int deter)
 	return (int)result;
 }
 
+//Делает подпись для числа hash
 intArray * makeSigne(intArray *const signe, int hash, int d, int n)
 {
-	for (int i = 0; msg[i]; ++i) {
-		pushIntArray(signe, pow_special(msg[i], d, n));
+	int i;
+	int j;
+	for(i = 1; hash > i * 10; i *= 10);
+	for(j = 0; i != 0; i /= 10, ++j) {
+		pushIntArray(signe, pow_special(hash / i + '0', d, n));
+		hash %= i;
 	}
+
 	return signe;
 }
+
+//Получает число hash из подписи signe
 int getHash(intArray *const signe, int e, int n)
 {
 	int hash = 0;
 	for (int i = 0; i < signe->count; ++i) {
 		hash *= 10;
-		hash += pow_special(signe->array[i], e, n);
+		hash += pow_special(signe->array[i], e, n) - '0';
 	}
 	return hash;
 }
 
-
-
+//Получить хэш строки
 int makeHash(char *const str) {
 	const int alphabet = 256;
 	const int mod = 1e9+7;
@@ -180,26 +134,26 @@ int main()
 {
 	RSA gen;
 	intArray signe;
-	charArray hash;
-	char msg[] = "1234";
+	char msg[] = "asdbhja scajb";
+	int hash;
 
 	setUpIntArray(&signe, 10, 10);
-	setUpCharArray(&hash, 10, 10);
 	setUpRSA(&gen, 17, 3557, 2579);
-	makeSigne(&signe, msg, gen.d, gen.n);
 
-	printf("Msg is: %s\nSigne is: ", msg);
+	hash = makeHash(msg);
+	makeSigne(&signe, hash, gen.d, gen.n);
+	printf("Msg is: %s\nHash is: %d\nSigne is: ", msg, hash);
 	for(int i = 0; i < signe.count; ++i) {
 		printf("%d ", signe.array[i]);
 	}
 	printf("\n");
 
-	getHash(&hash, &signe, gen.e, gen.n);
-	printf("Decoded hash: %s\n", hash.array);
-	printf("Control hash: %d", )
+
+	hash = getHash(&signe, gen.e, gen.n);
+	printf("Decoded hash: %d\n", hash);
+	printf("Control hash: %d\n", makeHash(msg));
 
 	free(signe.array);
-	free(hash.array);
 	
 	getchar();
 	return 0;
