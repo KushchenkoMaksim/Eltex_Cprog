@@ -93,26 +93,26 @@ int pow_special(int number, int expo, int deter)
 }
 
 //Делает подпись для числа hash
-intArray * makeSigne(intArray *const signe, int hash, int d, int n)
+intArray * makesign(intArray *const sign, int hash, int d, int n)
 {
 	int i;
 	int j;
 	for(i = 1; hash > i * 10; i *= 10);
 	for(j = 0; i != 0; i /= 10, ++j) {
-		pushIntArray(signe, pow_special(hash / i + '0', d, n));
+		pushIntArray(sign, pow_special(hash / i + '0', d, n));
 		hash %= i;
 	}
 
-	return signe;
+	return sign;
 }
 
-//Получает число hash из подписи signe
-int getHash(intArray *const signe, int e, int n)
+//Получает число hash из подписи sign
+int getHash(intArray *const sign, int e, int n)
 {
 	int hash = 0;
-	for (int i = 0; i < signe->count; ++i) {
+	for (int i = 0; i < sign->count; ++i) {
 		hash *= 10;
-		hash += pow_special(signe->array[i], e, n) - '0';
+		hash += pow_special(sign->array[i], e, n) - '0';
 	}
 	return hash;
 }
@@ -133,27 +133,27 @@ int makeHash(char *const str) {
 int main()
 {
 	RSA gen;
-	intArray signe;
+	intArray sign;
 	char msg[] = "asdbhja scajb";
 	int hash;
 
-	setUpIntArray(&signe, 10, 10);
+	setUpIntArray(&sign, 10, 10);
 	setUpRSA(&gen, 17, 3557, 2579);
 
 	hash = makeHash(msg);
-	makeSigne(&signe, hash, gen.d, gen.n);
-	printf("Msg is: %s\nHash is: %d\nSigne is: ", msg, hash);
-	for(int i = 0; i < signe.count; ++i) {
-		printf("%d ", signe.array[i]);
+	makesign(&sign, hash, gen.d, gen.n);
+	printf("Msg is: %s\nHash is: %d\nsign is: ", msg, hash);
+	for(int i = 0; i < sign.count; ++i) {
+		printf("%d ", sign.array[i]);
 	}
 	printf("\n");
 
 
-	hash = getHash(&signe, gen.e, gen.n);
+	hash = getHash(&sign, gen.e, gen.n);
 	printf("Decoded hash: %d\n", hash);
 	printf("Control hash: %d\n", makeHash(msg));
 
-	free(signe.array);
+	free(sign.array);
 	
 	getchar();
 	return 0;
