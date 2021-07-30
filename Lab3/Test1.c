@@ -15,13 +15,7 @@ typedef struct productArray {
 	int productsCount;
 } productArray;
 
-int addProduct(productArray *const mas, char *const str);//Done
-int removeProduct(productArray *const mas, int index);//Done
-void showProducts(productArray *const mas);//Done
-void sortProducts(productArray *const mas, char *const field);//Done
-int findElem(productArray *const mas, char *const field, char *const data);//Done
-int changeElem(productArray *const mas, int index);//Done
-
+//Сортирует массив
 void sortProducts(productArray *const mas, char *const field) {
 	if(strcmp(field, "price") == 0) {
 		for(int i = 0; i < mas->productsCount - 1; ++i) {
@@ -104,6 +98,8 @@ char * readString() {
 		return 0;
 	return str;
 }
+
+//Возвращает число из строки
 int getIntFromStr(char *const str) {
 	int number = 0;
 	for(int i = 0; str[i]; ++i) {
@@ -116,6 +112,7 @@ int getIntFromStr(char *const str) {
 	return number;
 }
 
+//Возвращает Int, два последних разряда кодируют вещественную часть, старшие - целую
 int getCodedFloatFromStr(char *const str, int *index) {
 	int number;
 	int i;
@@ -154,6 +151,7 @@ int getCodedFloatFromStr(char *const str, int *index) {
 	return number;
 }
 
+//Поиск наиболее близкого элемента в массиве
 int findElem(productArray *const mas, char *const field, char *const data) {
 	if(strcmp(field, "price") == 0) {
 		int maxIndex = 0;
@@ -226,11 +224,13 @@ int findElem(productArray *const mas, char *const field, char *const data) {
 	}
 }
 
+//Возвращает индекс следующего символа не пробела
 int ignoreSpaces(char *const str, int i) {
 	for(; str[i] == ' ' || str[i] == '\t'; ++i);
 	return i;
 }
 
+//Заполняем структуру из строки
 int fillProductStructer(product *const elem, char *const str) {
 	//Начинаем переводить строку в структуру.
 	char * word;
@@ -238,12 +238,12 @@ int fillProductStructer(product *const elem, char *const str) {
 	int maxSize;
 	int count;
 
-//Игнорируем пробелы в начале
+	//Игнорируем пробелы в начале
 	i = ignoreSpaces(str, i);
 	if( str[i] == '\0')
 		return -1;
 
-//Выделяем память под name в product и копируем туда запись
+	//Выделяем память под name в product и копируем туда запись
 	if ( !(elem->name = (char *)malloc(sizeof(char) * 10)) )
 		return -1;
 
@@ -263,7 +263,7 @@ int fillProductStructer(product *const elem, char *const str) {
 	
 	i = ignoreSpaces(str, i+1);
 
-//Заполняем поле count
+	//Заполняем поле count
 	elem->count = 0;
 	for(;str[i] && str[i] != ' ' && str[i] != '\t'; ++i) {
 		if(str[i] > '9' || str[i] < '0') {
@@ -274,14 +274,17 @@ int fillProductStructer(product *const elem, char *const str) {
 	}
 	
 	i = ignoreSpaces(str, i+1);
+	//Заполняем поле price так, что два последних разряда кодируют вещественную часть, старшие - целую
 	elem->price = getCodedFloatFromStr(str, &i);
 
 	i = ignoreSpaces(str, i+1);
+	//Заполняем поле tradeMargin так, что два последних разряда кодируют вещественную часть, старшие - целую
 	elem->tradeMargin = getCodedFloatFromStr(str, &i);
 
 	return 0;
 }
 
+//Добавляем продукт из строки
 int addProduct(productArray *const mas, char *const str) {
 //Выделяем память под массив при добавлении первой записи и расширяем по мере необходимости
 	if (!mas->productsCount && !(mas->productsArray = (product *)malloc(sizeof(product) * mas->productsMaxSize)) )
@@ -301,6 +304,7 @@ int addProduct(productArray *const mas, char *const str) {
 	return (mas->productsCount - 1);
 }
 
+//Выводит таблицу на экран
 void showProducts(productArray *const mas) {
 	for(int i = 0; i != mas->productsCount; ++i) {
 		printf("Row %d: %s    %d    ", i, mas->productsArray[i].name, mas->productsArray[i].count);
@@ -309,6 +313,7 @@ void showProducts(productArray *const mas) {
 	}
 }
 
+//Очистить таблицу
 void freeArray(productArray *const mas) {
 	for(int i = 0; i != mas->productsCount; ++i) {
 		free(mas->productsArray[i].name);
@@ -318,6 +323,65 @@ void freeArray(productArray *const mas) {
 	mas->productsMaxSize = 10;
 }
 
+//Сохранить в файл
+int saveToFile(productArray *const mas, char *const filename) {
+	FILE *f;
+	if(!(f = fopen(filename, "w"))) {
+		return -1;
+	}
+	for(int i = 0; i != mas->productsCount; ++i) {
+		fprintf(f, "%s    %d    ", mas->productsArray[i].name, mas->productsArray[i].count);
+		fprintf(f, "%d.%d    ", mas->productsArray[i].price / 100, mas->productsArray[i].price % 100);
+		fprintf(f, "%d.%d\n", mas->productsArray[i].tradeMargin / 100, mas->productsArray[i].tradeMargin % 100);
+	}
+	fclose(f);
+	return 1;
+}
+
+//Загрузить из файла
+int readFromFile(productArray *const mas, char *const filename) {
+
+	freeArray(mas);
+	int strSize;
+	int delta = 10;
+	char *str;
+	char sym;
+	int i;
+	FILE *f;
+	if(!(f = fopen(filename, "r"))) {
+		return -1;
+	}
+	
+	sym = 0;
+	while(sym != EOF) {	
+		strSize = 10;
+		i = 0;
+		if ( !(str = (char *)malloc(sizeof(char) * strSize)) )
+			return -1;
+	
+		do {
+			sym = getc(f);
+			if(i == strSize) {
+				strSize += delta;
+				if ( !(str = (char *)realloc(str, sizeof(char) * strSize)) )
+					return 0;
+			}
+			str[i++] = sym;
+
+		}
+		while (sym != EOF &&  sym != '\n' &&  sym != '\r');
+		str[i-1] = '\0';
+		if ( !(str = (char *)realloc(str, i * sizeof(char))) )
+			return -1;
+		if( -1 == addProduct(mas, str)) {
+			return -1;
+		}
+		free(str);
+	}
+	return 1;
+}
+
+//Удаляет продукт из массива
 int removeProduct(productArray *const mas, int index) {
 	if(index >= mas->productsCount) {
 		return -1;
@@ -330,6 +394,7 @@ int removeProduct(productArray *const mas, int index) {
 	return 0;
 }
 
+//Изменяет элемент с индексом index
 int changeElem(productArray *const mas, int index) {
 	char *str = readString();
 	if(index >= mas->productsCount)
@@ -362,12 +427,22 @@ int main() {
 	}
 	showProducts(&mas);
 	printf("\n");
-	printf("Elem is on %d position\n\n", findElem(&mas, "count", "1"));
+
+	//Ниже идет ряд тестов
+	
+	/*saveToFile(&mas, "123.txt");
+	freeArray(&mas);
+	readFromFile(&mas, "123.txt");
+	showProducts(&mas);
+	printf("\n");*/
+
+	/*printf("Elem is on %d position\n\n", findElem(&mas, "count", "1"));
 	printf("Elem is on %d position\n\n", findElem(&mas, "count", "12000"));
 	printf("Elem is on %d position\n\n", findElem(&mas, "price", "10757.348757"));
 	printf("Elem is on %d position\n\n", findElem(&mas, "price", "10"));
 	printf("Elem is on %d position\n\n", findElem(&mas, "name", "sofa"));
-	printf("Elem is on %d position\n\n", findElem(&mas, "name", "chaer"));
+	printf("Elem is on %d position\n\n", findElem(&mas, "name", "chaer"));*/
+
 	/*sortProducts(&mas, "count");
 	showProducts(&mas);
 	printf("\n");
@@ -376,6 +451,7 @@ int main() {
 	sortProducts(&mas, "name");
 	showProducts(&mas);
 	printf("\n");*/
+
 	/*removeProduct(&mas, 0);
 	showProducts(&mas);
 	removeProduct(&mas, 1);
@@ -384,6 +460,8 @@ int main() {
 	showProducts(&mas);
 	changeElem(&mas, 0);
 	showProducts(&mas);*/
+
+
 	freeArray(&mas);
 	getchar();
 }
